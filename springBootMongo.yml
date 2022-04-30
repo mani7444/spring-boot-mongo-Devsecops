@@ -1,4 +1,4 @@
-apiVersion: v1/app
+apiVersion: v1/apps
 kind: Secret
 metadata:
   name: springappsecrets
