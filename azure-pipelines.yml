@@ -34,21 +34,14 @@ steps:
     repository: 'mani7444 / azure'
     command: 'buildAndPush'
     Dockerfile: '**/Dockerfile'
-steps: 
-  - 
-    displayName: "Clone Trivy"
+- script: |
+    sudo apt-get install rpm
+    wget https://github.com/aquasecurity/trivy/releases/download/v$(trivyVersion)/trivy_$(trivyVersion)_Linux-64bit.deb
+    sudo dpkg -i trivy_$(trivyVersion)_Linux-64bit.deb
+    trivy -v
+  displayName: 'Download and install Trivy'
+- task: CmdLine@2
+  displayName: "Run trivy scan"
+  inputs:
     script: |
-        git clone https://github.com/aquasecurity/trivy
-        export GO111MODULE=on
-  - 
-    displayName: "Install Trivy"
-    inputs: 
-      command: build
-      workingDirectory: $(System.DefaultWorkingDirectory)/trivy/cmd/trivy
-    task: Go@0
-  - 
-    displayName: "Run Trivy scan"
-    inputs: 
-      script: "trivy image mani7444/spring-boot-mongo:tagname"
-    task: CmdLine@2
-
+      trivy image mani7444/spring-boot-mongo:tagname
