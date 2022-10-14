@@ -34,3 +34,12 @@ steps:
     repository: 'mani7444 / azure'
     command: 'buildAndPush'
     Dockerfile: '**/Dockerfile'
+--- 
+steps: 
+  - 
+    displayName: "Download and install Trivy"
+    script: |
+        sudo apt-get install rpm
+        wget https://github.com/aquasecurity/trivy/releases/download/v$(trivyVersion)/trivy_$(trivyVersion)_Linux-64bit.deb
+        sudo dpkg -i trivy_$(trivyVersion)_Linux-64bit.deb
+        trivy -v
