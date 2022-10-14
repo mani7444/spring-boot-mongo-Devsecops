@@ -28,15 +28,14 @@ steps:
     publishJUnitResults: true
     testResultsFiles: '**/surefire-reports/TEST-*.xml'
     goals: 'package'
+    
     - task: SonarQubePrepare@5
       inputs:
         SonarQube: 'azure'
         scannerMode: 'MSBuild'
         projectKey: 'sqp_55e8ce946e2d18e23f42df65e66896b698020b7e'
         projectName: 'azure'
-        - task: SonarQubePublish@5
-          inputs:
-            pollingTimeoutSec: '300'
+            
 - task: Docker@2
   inputs:
     containerRegistry: 'docker push mani7444/azure:tagname'
