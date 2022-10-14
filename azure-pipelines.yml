@@ -34,7 +34,7 @@ steps:
     repository: 'mani7444 / azure'
     command: 'buildAndPush'
     Dockerfile: '**/Dockerfile'
-  - 
+  
     displayName: "Download and install Trivy"
     script: |
         sudo apt-get install rpm
