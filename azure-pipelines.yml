@@ -46,4 +46,4 @@ steps:
   displayName: "Run trivy scan"
   inputs:
     script: |
-      trivy image mani7444/spring-boot-mongo:tagname
+      trivy image mani7444/spring-boot-mongo
