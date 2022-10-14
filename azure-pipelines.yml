@@ -1,57 +1,64 @@
-# Maven
-
-
-# Build your Java project and run tests with Apache Maven.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/java
-
-trigger:
-- main
-
-pool:
+--- 
+pool: 
   vmImage: ubuntu-latest
-
-steps:
-- task: Gitleaks@2
-  inputs:
-    scanlocation: '$(Build.SourcesDirectory)'
-    configtype: 'default'
-    scanmode: 'all'
-    reportformat: 'sarif'
-- task: Maven@3
-  inputs:
-    mavenPomFile: 'pom.xml'
-    mavenOptions: '-Xmx3072m'
-    javaHomeOption: 'JDKVersion'
-    jdkVersionOption: '1.8'
-    jdkArchitectureOption: 'x64'
-    publishJUnitResults: true
-    testResultsFiles: '**/surefire-reports/TEST-*.xml'
-    goals: 'package'
-    
-    - task: SonarQubePrepare@5
-      inputs:
-        SonarQube: 'azure'
-        scannerMode: 'MSBuild'
-        projectKey: 'sqp_55e8ce946e2d18e23f42df65e66896b698020b7e'
-        projectName: 'azure'
-            
-- task: Docker@2
-  inputs:
-    containerRegistry: 'docker push mani7444/azure:tagname'
-    repository: 'mani7444 / azure'
-    command: 'buildAndPush'
-    Dockerfile: '**/Dockerfile'
-- script: |
-    sudo apt-get install wget apt-transport-https gnupg lsb-release
-    wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-    echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
-    sudo apt-get update
-    sudo apt-get install trivy
-
-  displayName: 'Download and install Trivy'
-- task: CmdLine@2
-  displayName: "Run trivy scan"
-  inputs:
+steps: 
+  - 
+    inputs: 
+      configtype: default
+      reportformat: sarif
+      scanlocation: $(Build.SourcesDirectory)
+      scanmode: all
+    task: Gitleaks@2
+  - 
+    displayName: "Prepare Analysis Configuration task"
+    enabled: true
+    inputs: 
+      SonarQube: SonarQube
+      extraProperties: |
+          sonar.projectVersion=1.0.0.0
+          sonar.projectName=springsonarqube
+          sonar.sources=src/main/java/
+          sonar.language=java
+          sonar.sourceEncoding=UTF-8
+      scannerMode: Other
+    task: SonarQubePrepare@4
+  - 
+    enabled: true
+    inputs: 
+      effectivePomSkip: false
+      goals: "clean package"
+      javaHomeOption: JDKVersion
+      mavenAuthenticateFeed: false
+      mavenPomFile: $(Build.SourcesDirectory)/sonarqube/sonarqubespring/pom.xml
+      mavenVersionOption: Default
+      publishJUnitResults: true
+      sonarQubeRunAnalysis: true
+    task: Maven@3
+  - 
+    displayName: "Publish Quality Gate Result"
+    enabled: false
+    inputs: 
+      pollingTimeoutSec: "300"
+    task: SonarQubePublish@4
+  - 
+    inputs: 
+      Dockerfile: "**/Dockerfile"
+      command: buildAndPush
+      containerRegistry: "docker push mani7444/azure:tagname"
+      repository: "mani7444 / azure"
+    task: Docker@2
+  - 
+    displayName: "Download and install Trivy"
     script: |
-      trivy image mani7444/spring-boot-mongo
+        sudo apt-get install wget apt-transport-https gnupg lsb-release
+        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+        echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+        sudo apt-get update
+        sudo apt-get install trivy
+  - 
+    displayName: "Run trivy scan"
+    inputs: 
+      script: "trivy image mani7444/spring-boot-mongo"
+    task: CmdLine@2
+trigger: 
+  - main
