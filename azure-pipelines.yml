@@ -1,3 +1,4 @@
+--- 
 pool: 
   vmImage: ubuntu-latest
 steps: 
@@ -22,16 +23,15 @@ steps:
       scannerMode: Other
     task: SonarQubePrepare@4
   - 
-    enabled: true
     inputs: 
-      effectivePomSkip: false
-      goals: "clean package"
+      goals: package
       javaHomeOption: JDKVersion
-      mavenAuthenticateFeed: false
-      mavenPomFile: $(Build.SourcesDirectory)/sonarqube/sonarqubespring/pom.xml
-      mavenVersionOption: Default
+      jdkArchitectureOption: x64
+      jdkVersionOption: "1.8"
+      mavenOptions: "-Xmx3072m"
+      mavenPomFile: pom.xml
       publishJUnitResults: true
-      sonarQubeRunAnalysis: true
+      testResultsFiles: "**/surefire-reports/TEST-*.xml"
     task: Maven@3
   - 
     displayName: "Publish Quality Gate Result"
@@ -57,7 +57,7 @@ steps:
   - 
     displayName: "Run trivy scan"
     inputs: 
-      script: "trivy image mani7444/spring-boot-mongo"
+      script: "trivy image mani7444/spring-boot-mongo\n"
     task: CmdLine@2
 trigger: 
   - main
