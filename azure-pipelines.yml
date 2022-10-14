@@ -34,8 +34,6 @@ steps:
     repository: 'mani7444 / azure'
     command: 'buildAndPush'
     Dockerfile: '**/Dockerfile'
---- 
-steps: 
   - 
     displayName: "Download and install Trivy"
     script: |
