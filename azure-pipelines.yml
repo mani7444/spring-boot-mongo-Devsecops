@@ -1,63 +1,48 @@
---- 
-pool: 
+trigger:
+- main
+
+pool:
   vmImage: ubuntu-latest
-steps: 
-  - 
-    inputs: 
-      configtype: default
-      reportformat: sarif
-      scanlocation: $(Build.SourcesDirectory)
-      scanmode: all
-    task: Gitleaks@2
-  - 
-    displayName: "Prepare Analysis Configuration task"
-    enabled: true
-    inputs: 
-      SonarQube: SonarQube
-      extraProperties: |
-          sonar.projectVersion=1.0.0.0
-          sonar.projectName=springsonarqube
-          sonar.sources=src/main/java/
-          sonar.language=java
-          sonar.sourceEncoding=UTF-8
-      scannerMode: Other
-    task: SonarQubePrepare@4
-  - 
-    inputs: 
-      goals: package
-      javaHomeOption: JDKVersion
-      jdkArchitectureOption: x64
-      jdkVersionOption: "1.8"
-      mavenOptions: "-Xmx3072m"
-      mavenPomFile: pom.xml
-      publishJUnitResults: true
-      testResultsFiles: "**/surefire-reports/TEST-*.xml"
-    task: Maven@3
-  - 
-    displayName: "Publish Quality Gate Result"
-    enabled: false
-    inputs: 
-      pollingTimeoutSec: "300"
-    task: SonarQubePublish@4
-  - 
-    inputs: 
-      Dockerfile: "**/Dockerfile"
-      command: buildAndPush
-      containerRegistry: "docker push mani7444/azure:tagname"
-      repository: "mani7444 / azure"
-    task: Docker@2
-  - 
-    displayName: "Download and install Trivy"
+
+steps:
+- task: Gitleaks@2
+  inputs:
+    scanlocation: '$(Build.SourcesDirectory)'
+    configtype: 'default'
+    scanmode: 'all'
+    reportformat: 'sarif'
+- task: Maven@3
+  inputs:
+    mavenPomFile: 'pom.xml'
+    mavenOptions: '-Xmx3072m'
+    javaHomeOption: 'JDKVersion'
+    jdkVersionOption: '1.8'
+    jdkArchitectureOption: 'x64'
+    publishJUnitResults: true
+    testResultsFiles: '**/surefire-reports/TEST-*.xml'
+    goals: 'package'
+- task: SonarQubePublish@4
+  displayName: Publish Quality Gate Result
+  inputs:
+    pollingTimeoutSec: '300'
+  enabled: false
+            
+- task: Docker@2
+  inputs:
+    containerRegistry: 'docker push mani7444/azure:tagname'
+    repository: 'mani7444 / azure'
+    command: 'buildAndPush'
+    Dockerfile: '**/Dockerfile'
+- script: |
+    sudo apt-get install wget apt-transport-https gnupg lsb-release
+    wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+    echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+    sudo apt-get update
+    sudo apt-get install trivy
+
+  displayName: 'Download and install Trivy'
+- task: CmdLine@2
+  displayName: "Run trivy scan"
+  inputs:
     script: |
-        sudo apt-get install wget apt-transport-https gnupg lsb-release
-        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-        echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
-        sudo apt-get update
-        sudo apt-get install trivy
-  - 
-    displayName: "Run trivy scan"
-    inputs: 
-      script: "trivy image mani7444/spring-boot-mongo\n"
-    task: CmdLine@2
-trigger: 
-  - main
+      trivy image mani7444/spring-boot-mongo
