@@ -5,12 +5,6 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
-- task: Gitleaks@2
-  inputs:
-    scanlocation: '$(Build.SourcesDirectory)'
-    configtype: 'default'
-    scanmode: 'all'
-    reportformat: 'sarif'
 - task: Maven@3
   inputs:
     mavenPomFile: 'pom.xml'
