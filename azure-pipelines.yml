@@ -5,6 +5,12 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
+- task: Gitleaks@2
+  inputs:
+    scanlocation: '$(Build.SourcesDirectory)'
+    configtype: 'default'
+    scanmode: 'all'
+    reportformat: 'sarif'
 - task: Maven@3
   inputs:
     mavenPomFile: 'pom.xml'
@@ -15,17 +21,15 @@ steps:
     publishJUnitResults: true
     testResultsFiles: '**/surefire-reports/TEST-*.xml'
     goals: 'package'
-- task: SonarQubePublish@4
-  displayName: Publish Quality Gate Result
-  inputs:
-    pollingTimeoutSec: '300'
-  enabled: false
 - task: SonarQubePrepare@5
   inputs:
-    SonarQube: 'azure'
-    scannerMode: 'MSBuild'
-    projectKey: 'sqp_55e8ce946e2d18e23f42df65e66896b698020b7e'
-    projectName: 'azure'
+    SonarQube: 'azuresonar'
+    scannerMode: 'Other'
+    extraProperties: |
+      # Additional properties that will be passed to the scanner, 
+      # Put one key=value per line, example:
+      # sonar.exclusions=**/*.bin
+      sonar.projectKey=Azuredemo
             
 - task: Docker@2
   inputs:
