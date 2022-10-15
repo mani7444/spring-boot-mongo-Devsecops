@@ -26,14 +26,19 @@ steps:
     SonarQube: 'azuresonar'
     scannerMode: 'Other'
     extraProperties: |
-      # Additional properties that will be passed to the scanner, 
+      # Additional properties that will be passed to the scanner,
       # Put one key=value per line, example:
       # sonar.exclusions=**/*.bin
-      sonar.projectKey=Azuredemo
-- task: SonarQubePublish@5
+      sonar.projectKey=Demo_Demo_AYPbWtvBPfS1XkURlp98
+- task: JavaToolInstaller@0
   inputs:
-    pollingTimeoutSec: '300'
-            
+    versionSpec: '11'
+    jdkArchitectureOption: 'x64'
+    jdkSourceOption: 'PreInstalled'
+    - task: SonarQubeAnalyze@5
+    - task: SonarQubePublish@5
+      inputs:
+        pollingTimeoutSec: '300'
 - task: Docker@2
   inputs:
     containerRegistry: 'docker push mani7444/azure:tagname'
